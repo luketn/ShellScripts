@@ -11,8 +11,7 @@ function getAllDatabases(){
     }
     return dbs
 }
-
-function profileForSecond(seconds, allDbs){
+function profileForSeconds(seconds, allDbs){
     var dbsToRunOn = []
     if (allDbs){
         dbsToRunOn = getAllDatabases()
@@ -22,32 +21,28 @@ function profileForSecond(seconds, allDbs){
     dbsToRunOn.forEach(function(database){
         database.setProfilingLevel(2);
     })
-         
-    sleep(seconds * 1000);
-         
+    sleep(seconds * 1000)
     var activityDocuments = {
         databasesWithNoActivity : ""
     }
-    
-    dbsToRunOn.forEach(function(database){   
+    dbsToRunOn.forEach(function(database){
         var ago = new Date(new Date().getTime() - (seconds * 1000))
-        var activityByCollection = database.system.profile.aggregate([{$match:{ts: {$gte: ago}, ns: {$nin: [/^admin/i, /.*\.system\.profile$/i, /.*\.system\.indexes$/i]}}}, {$group: {_id:"$ns", count: {$sum:1}}}, {$sort: {count:-1}}]).result;
-        var activity = {};
+        var activityByCollection = database.system.profile.aggregate([{$match:{ts: {$gte: ago}, ns: {$nin: [/^admin/i, /.*\.system\.profile$/i, /.*\.system\.indexes$/i]}}}, {$group: {_id:"$ns", count: {$sum:1}}}, {$sort: {count:-1}}]).result
+        var activity = {}
         if (activityByCollection.length==0){
             if (activityDocuments.databasesWithNoActivity.length > 0){
-                activityDocuments.databasesWithNoActivity += ", ";
+                activityDocuments.databasesWithNoActivity += ", "
             }
-            activityDocuments.databasesWithNoActivity+=database.getName();
+            activityDocuments.databasesWithNoActivity+=database.getName()
         }else{
             for (i in activityByCollection){
-                var collectionName = activityByCollection[i]._id;
-                var collectionActivityCount = activityByCollection[i].count;
-                activity[collectionName] = collectionActivityCount;
+                var collectionName = activityByCollection[i]._id
+                var collectionActivityCount = activityByCollection[i].count
+                activity[collectionName] = collectionActivityCount
             }
-            activityDocuments[database.getName()]=activity;
+            activityDocuments[database.getName()]=activity
         }
-         
-        database.setProfilingLevel(0);
-    });
+        database.setProfilingLevel(0)
+    })
     print(activityDocuments)
 }
